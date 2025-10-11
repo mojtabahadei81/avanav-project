@@ -1,5 +1,6 @@
+// in client/src/components/AnnotationWorkspace.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api'; // <-- 1. تغییر: استفاده از api
 
 const AnnotationWorkspace = ({ task, onTaskSubmit }) => {
   const [correctedText, setCorrectedText] = useState('');
@@ -23,14 +24,13 @@ const AnnotationWorkspace = ({ task, onTaskSubmit }) => {
       alert('Please fill all fields before submitting.');
       return;
     }
-
     try {
-      const response = await axios.put(`http://localhost:5000/api/tasks/${task._id}`, {
+      // 2. تغییر: استفاده از api.put و URL کوتاه شده
+      const response = await api.put(`/api/tasks/${task._id}`, {
         correctedText,
         gender,
         ageRange,
       });
-
       console.log('Task updated successfully:', response.data);
       onTaskSubmit();
     } catch (error) {
@@ -42,6 +42,7 @@ const AnnotationWorkspace = ({ task, onTaskSubmit }) => {
   const audioSrc = `http://localhost:5000${task.audioUrl}`;
 
   return (
+    // ... (کد JSX شما بدون تغییر باقی می‌ماند)
     <div className="workspace-container">
       <h2>Annotation Workspace</h2>
       <p><strong>Task ID:</strong> {task._id}</p>

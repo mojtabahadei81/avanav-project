@@ -22,6 +22,10 @@ const taskSchema = new mongoose.Schema({
     ref: 'User', // ارجاع به مدل 'User'
   },
   // --------------------
+  verifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
   correctedText: { type: String },
   gender: { type: String, enum: ['male', 'female'] },
   ageRange: { type: String },

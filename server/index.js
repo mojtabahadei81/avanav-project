@@ -5,7 +5,10 @@ const connectDB = require('./config/db');
 const Task = require('./models/TaskModel');
 
 const userRoutes = require('./routes/userRoutes'); // 1. ایمپورت کردن روت‌ها
+const adminRoutes = require('./routes/adminRoutes'); // <-- 2. روت ادمین را ایمپورت کنید
+
 const { protect } = require('./middleware/authMiddleware');
+const { admin } = require('./middleware/adminMiddleware'); // <-- 1. میدل‌ور ادمین را ایمپورت کنید
 
 
 connectDB();
@@ -13,8 +16,10 @@ connectDB();
 const app = express();
 app.use(cors()); // 2. Use cors middleware
 app.use(express.json()); // <-- This line is crucial for reading JSON from requests
+app.use('/uploads', express.static('server/uploads')); // <-- 3. این خط مهم را اضافه کنید
 app.use(express.static('public'));
 app.use('/api/users', userRoutes); // 2. استفاده از روت‌ها
+app.use('/api/admin', protect, admin, adminRoutes); 
 
 const PORT = process.env.PORT || 5000;
 
@@ -102,24 +107,25 @@ app.put('/api/tasks/:id', protect, async (req, res) => { // 'protect' اضافه
 
 // @desc    Verify (approve/reject) a task
 // @route   POST /api/tasks/:id/verify
-app.post('/api/tasks/:id/verify', protect, async (req, res) => { // 'protect' اضافه شد
+app.post('/api/tasks/:id/verify', protect, async (req, res) => {
   try {
-    const { action } = req.body; // action will be 'approve' or 'reject'
+    const { action } = req.body;
     const taskId = req.params.id;
+    const verifierId = req.user._id; // <-- ID کاربر تاییدکننده
 
     let updateData;
 
     if (action === 'approve') {
-      // If approved, the task is considered complete.
-      updateData = { status: 'completed' };
+      // اگر تایید شد، ID تاییدکننده را هم ثبت کن
+      updateData = { status: 'completed', verifiedBy: verifierId }; // <-- تغییر در این خط
     } else if (action === 'reject') {
-      // If rejected, it goes back to the annotation queue.
-      // We also clear the previous correction data.
+      // اگر رد شد، اطلاعات اصلاح قبلی و اصلاح‌کننده را پاک کن
       updateData = { 
         status: 'pending_annotation',
         correctedText: '',
         gender: '',
-        ageRange: ''
+        ageRange: '',
+        annotatedBy: null, // <-- پاک کردن اصلاح‌کننده قبلی
       };
     } else {
       return res.status(400).json({ message: 'Invalid action.' });

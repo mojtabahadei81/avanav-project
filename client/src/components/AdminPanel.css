@@ -1,0 +1,222 @@
+/* in client/src/components/AdminPanel.css */
+
+.admin-panel {
+  width: 100%;
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 2.5rem;
+  background-color: var(--background-color-light);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--border-color);
+  animation: fadeIn 0.5s ease-out;
+}
+
+.admin-title {
+  color: var(--primary-color);
+  text-align: center;
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
+}
+
+.admin-subtitle {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  color: var(--text-color-secondary);
+  font-size: 1rem;
+}
+
+.upload-form .form-group {
+  margin-bottom: 2rem;
+}
+
+.upload-form label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-color-primary);
+  margin-bottom: 0.75rem;
+}
+
+.upload-form input[type="file"] {
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  background-color: var(--background-color);
+  color: var(--text-color-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.upload-form input[type="file"]:hover {
+  border-color: var(--primary-color);
+  background-color: var(--background-color-light);
+}
+
+.file-count {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  margin-top: 0.5rem;
+}
+
+.upload-button {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(90deg, var(--primary-color), #00c4d1);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.upload-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 173, 181, 0.4);
+}
+
+.upload-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.loading-spinner-btn {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+.success-message {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: rgba(0, 173, 181, 0.1);
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* We can reuse the .error-message style from App.css */
+
+
+/* in client/src/components/AdminPanel.css */
+
+.admin-panel {
+  width: 100%;
+  max-width: 900px;
+  margin: 1rem auto;
+  padding: 1.5rem;
+  background-color: var(--background-color-light);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  animation: fadeIn 0.5s ease-out;
+}
+
+.admin-title {
+  text-align: center;
+  color: var(--text-color-primary);
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+}
+
+/* Tab Styles */
+.admin-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.tab-button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  background-color: transparent;
+  color: var(--text-color-secondary);
+  cursor: pointer;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.tab-button::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary-color);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.tab-button.active {
+  color: var(--primary-color);
+}
+
+.tab-button.active::after {
+  transform: scaleX(1);
+}
+
+/* Upload Section Styles */
+.upload-section .admin-subtitle {
+  text-align: center;
+  color: var(--text-color-secondary);
+  margin-bottom: 2rem;
+}
+
+.upload-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.upload-form label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-color-primary);
+  margin-bottom: 0.5rem;
+}
+
+.upload-form input[type='file'] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--background-color);
+  color: var(--text-color-secondary);
+}
+
+.upload-button {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.upload-button:disabled {
+  background-color: var(--text-color-secondary);
+  cursor: not-allowed;
+}
+
+.upload-button:not(:disabled):hover {
+  background-color: var(--primary-color-dark);
+}
+
+.success-message, .error-message {
+  text-align: center;
+  margin-top: 1rem;
+  padding: 10px;
+  border-radius: 5px;
+}

@@ -1,0 +1,67 @@
+/* in client/src/components/UserManagement.css */
+
+.user-management-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 1rem auto;
+}
+
+/* استایل‌های جدید برای نوار ابزار و دکمه کلی */
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.reset-all-btn {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background-color: var(--error-color-light);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.reset-all-btn:hover {
+  background-color: var(--error-color);
+  color: #fff;
+}
+/* پایان استایل‌های جدید */
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--background-color-light);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.user-table th,
+.user-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.user-table thead tr {
+  background-color: var(--background-color);
+  color: var(--text-color-primary);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.user-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.user-table tbody tr:hover {
+  background-color: var(--background-color);
+}

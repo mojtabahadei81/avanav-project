@@ -1,16 +1,13 @@
+// in client/src/components/AuthPage.jsx
 import React, { useState } from 'react';
-import axios from 'axios';
-import './AuthPage.css'; // We will create this file next
+import api from '../api'; // <-- 1. تغییر: استفاده از api
+import './AuthPage.css';
 
 const AuthPage = ({ onLoginSuccess }) => {
   const [isLoginMode, setIsLoginMode] = useState(true);
-  
-  // State for form fields
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // State for loading and errors
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -19,15 +16,14 @@ const AuthPage = ({ onLoginSuccess }) => {
     setLoading(true);
     setError('');
 
-    const url = isLoginMode 
-      ? 'http://localhost:5000/api/users/login' 
-      : 'http://localhost:5000/api/users/register';
-    
+    // 2. تغییر: URL های کوتاه شده
+    const url = isLoginMode ? '/api/users/login' : '/api/users/register';
     const payload = isLoginMode ? { email, password } : { name, email, password };
 
     try {
-      const { data } = await axios.post(url, payload);
-      onLoginSuccess(data); // Pass user data and token up to App.js
+      // 3. تغییر: استفاده از api.post
+      const { data } = await api.post(url, payload);
+      onLoginSuccess(data);
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred.');
     } finally {
@@ -36,6 +32,7 @@ const AuthPage = ({ onLoginSuccess }) => {
   };
 
   return (
+    // ... (کد JSX شما بدون تغییر باقی می‌ماند)
     <div className="auth-container">
       <div className="auth-form-wrapper">
         <h2 className="auth-title">{isLoginMode ? 'Welcome Back!' : 'Create Account'}</h2>
