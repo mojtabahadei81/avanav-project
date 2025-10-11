@@ -3,7 +3,7 @@ const cors = require('cors'); // 1. Import cors
 require('dotenv').config();
 const connectDB = require('./config/db');
 const Task = require('./models/TaskModel');
-
+const path = require('path');
 const userRoutes = require('./routes/userRoutes'); // 1. ایمپورت کردن روت‌ها
 const adminRoutes = require('./routes/adminRoutes'); // <-- 2. روت ادمین را ایمپورت کنید
 
@@ -16,10 +16,10 @@ connectDB();
 const app = express();
 app.use(cors()); // 2. Use cors middleware
 app.use(express.json()); // <-- This line is crucial for reading JSON from requests
-app.use('/uploads', express.static('server/uploads')); // <-- 3. این خط مهم را اضافه کنید
 app.use(express.static('public'));
 app.use('/api/users', userRoutes); // 2. استفاده از روت‌ها
 app.use('/api/admin', protect, admin, adminRoutes); 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const PORT = process.env.PORT || 5000;
 
