@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // Make sure axios is imported
+import axios from 'axios';
 
-const AnnotationWorkspace = ({ task, onTaskSubmit }) => { // 1. onTaskSubmit prop added
+const AnnotationWorkspace = ({ task, onTaskSubmit }) => {
   const [correctedText, setCorrectedText] = useState('');
   const [gender, setGender] = useState('');
   const [ageRange, setAgeRange] = useState('');
@@ -18,15 +18,13 @@ const AnnotationWorkspace = ({ task, onTaskSubmit }) => { // 1. onTaskSubmit pro
     return null;
   }
 
-  const handleSubmit = async () => { // 2. Make the function async
-    // Simple validation
+  const handleSubmit = async () => {
     if (!correctedText || !gender || !ageRange) {
       alert('Please fill all fields before submitting.');
       return;
     }
 
     try {
-      // 3. Send PUT request to the server
       const response = await axios.put(`http://localhost:5000/api/tasks/${task._id}`, {
         correctedText,
         gender,
@@ -34,7 +32,7 @@ const AnnotationWorkspace = ({ task, onTaskSubmit }) => { // 1. onTaskSubmit pro
       });
 
       console.log('Task updated successfully:', response.data);
-      onTaskSubmit(); // 4. Notify the parent component that the task is done
+      onTaskSubmit();
     } catch (error) {
       console.error('Error submitting task:', error);
       alert('Failed to submit correction. Please try again.');
@@ -67,15 +65,22 @@ const AnnotationWorkspace = ({ task, onTaskSubmit }) => { // 1. onTaskSubmit pro
       <div className="metadata-form">
         <div>
           <label htmlFor="gender">Gender:</label>
-          <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
-            {/* options... */}
-          </select>
+            <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+
         </div>
         <div>
           <label htmlFor="age">Age Range:</label>
-          <select id="age" value={ageRange} onChange={(e) => setAgeRange(e.target.value)}>
-            {/* options... */}
-          </select>
+            <select id="age" value={ageRange} onChange={(e) => setAgeRange(e.target.value)}>
+                <option value="">Select Age Range</option>
+                <option value="18-25">18-25</option>
+                <option value="26-35">26-35</option>
+                <option value="36-45">36-45</option>
+                <option value="46+">46+</option>
+            </select>
         </div>
       </div>
       
