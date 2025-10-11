@@ -8,6 +8,8 @@ connectDB();
 
 const app = express();
 app.use(cors()); // 2. Use cors middleware
+app.use(express.json()); // <-- This line is crucial for reading JSON from requests
+app.use(express.static('public'));
 
 const PORT = process.env.PORT || 5000;
 
@@ -33,6 +35,39 @@ app.get('/api/tasks/next', async (req, res) => {
     );
 
     res.json(task);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+
+// ... (after the GET endpoint)
+
+// @desc    Update a task with correction data
+// @route   PUT /api/tasks/:id
+app.put('/api/tasks/:id', async (req, res) => {
+  try {
+    const { correctedText, gender, ageRange } = req.body;
+    const taskId = req.params.id;
+
+    // Find the task by its ID and update it
+    const updatedTask = await Task.findByIdAndUpdate(
+      taskId,
+      {
+        correctedText,
+        gender,
+        ageRange,
+        status: 'pending_verification', // The task is now waiting for verification
+      },
+      { new: true } // This option returns the updated document
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({ message: 'Task not found.' });
+    }
+
+    res.json(updatedTask); // Send back the updated task as confirmation
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });

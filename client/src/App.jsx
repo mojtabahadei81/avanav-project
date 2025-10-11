@@ -1,51 +1,70 @@
 import React, { useState } from 'react';
-import axios from 'axios'; // Import axios
-import './App.css'; // You can keep the default styles for now
+import axios from 'axios';
+import AnnotationWorkspace from './components/AnnotationWorkspace';
+// در مراحل بعد کامپوننت VerificationWorkspace را خواهیم ساخت
+// import VerificationWorkspace from './components/VerificationWorkspace'; 
+import './App.css';
 
 function App() {
-  // State to store the task data
   const [task, setTask] = useState(null);
-  // State to handle loading status
   const [loading, setLoading] = useState(false);
-  // State to handle any errors
   const [error, setError] = useState('');
+  const [mode, setMode] = useState('annotation'); // 'annotation' or 'verification'
 
   const fetchNextTask = async () => {
     setLoading(true);
     setError('');
     setTask(null);
     try {
-      // Send a GET request to our backend API
+      // TODO: در قدم بعدی، این آدرس را بر اساس mode تغییر خواهیم داد
       const response = await axios.get('http://localhost:5000/api/tasks/next');
-      setTask(response.data); // Store the received task in the state
+      setTask(response.data);
     } catch (err) {
-      // Handle errors (e.g., no tasks available, or server is down)
       setError(err.response ? err.response.data.message : 'Failed to fetch task.');
     } finally {
-      setLoading(false); // Stop loading, regardless of outcome
+      setLoading(false);
     }
+  };
+
+  const handleTaskSubmit = () => {
+    fetchNextTask();
   };
 
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Avanav Annotation Dashboard</h1>
-        <button onClick={fetchNextTask} disabled={loading}>
-          {loading ? 'Loading...' : 'Get Next Task'}
-        </button>
+      <div className="App-header">
+        <h1>Avanav Dashboard</h1>
+        
+        {/* --- Role Selector --- */}
+        <div className="role-selector">
+          <button 
+            className={mode === 'annotation' ? 'active' : ''}
+            onClick={() => setMode('annotation')}
+          >
+            Annotator
+          </button>
+          <button 
+            className={mode === 'verification' ? 'active' : ''}
+            onClick={() => setMode('verification')}
+          >
+            Verifier
+          </button>
+        </div>
 
-        {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+        {/* --- Main Content --- */}
+        <div className="main-content">
+          {!task && (
+            <button onClick={fetchNextTask} disabled={loading}>
+              {loading ? 'Loading...' : `Get Next ${mode === 'annotation' ? 'Annotation' : 'Verification'} Task`}
+            </button>
+          )}
+          {error && <p className="error-message">Error: {error}</p>}
+          
+          {task && <AnnotationWorkspace task={task} onTaskSubmit={handleTaskSubmit} />}
+          {/* TODO: در مراحل بعد، بر اساس نوع تسک، کامپوننت مناسب را نمایش خواهیم داد */}
+        </div>
 
-        {task && (
-          <div className="task-container" style={{ marginTop: '20px', border: '1px solid #ccc', padding: '15px' }}>
-            <h2>Task Details</h2>
-            <p><strong>Task ID:</strong> {task._id}</p>
-            <p><strong>Audio URL:</strong> {task.audioUrl}</p>
-            <p><strong>Original Text:</strong> {task.originalText}</p>
-            <p><strong>Status:</strong> {task.status}</p>
-          </div>
-        )}
-      </header>
+      </div>
     </div>
   );
 }
