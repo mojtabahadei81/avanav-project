@@ -65,3 +65,70 @@
 .user-table tbody tr:hover {
   background-color: var(--background-color);
 }
+
+/* in src/components/UserManagement.css (at the end) */
+
+.section-title {
+  color: var(--text-color);
+  margin: 0;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-badge.status-active {
+  background-color: rgba(0, 173, 181, 0.2);
+  color: #00ADB5;
+}
+
+.status-badge.status-pending {
+  background-color: rgba(243, 156, 18, 0.2);
+  color: #f39c12;
+}
+
+/* in src/components/UserManagement.css (at the end) */
+
+.no-data-message {
+  text-align: center;
+  color: var(--text-color-secondary);
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: var(--background-color);
+  border-radius: 8px;
+}
+
+.action-button {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 5px;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.action-button.approve-button {
+  background-color: #27ae60;
+  color: white;
+}
+
+.action-button.approve-button:hover:not(:disabled) {
+  background-color: #2ecc71;
+}
+
+.action-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

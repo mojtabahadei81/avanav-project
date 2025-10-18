@@ -1,24 +1,24 @@
 const express = require('express');
-const cors = require('cors'); // 1. Import cors
+const cors = require('cors');
 require('dotenv').config();
 const connectDB = require('./config/db');
 const Task = require('./models/TaskModel');
 const path = require('path');
-const userRoutes = require('./routes/userRoutes'); // 1. ایمپورت کردن روت‌ها
-const adminRoutes = require('./routes/adminRoutes'); // <-- 2. روت ادمین را ایمپورت کنید
+const userRoutes = require('./routes/userRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const { protect } = require('./middleware/authMiddleware');
-const { admin } = require('./middleware/adminMiddleware'); // <-- 1. میدل‌ور ادمین را ایمپورت کنید
-
+const { admin } = require('./middleware/adminMiddleware');
+const { checkRole } = require('./middleware/roleMiddleware'); // ← اضافه شد
 
 connectDB();
 
 const app = express();
-app.use(cors()); // 2. Use cors middleware
-app.use(express.json()); // <-- This line is crucial for reading JSON from requests
+app.use(cors());
+app.use(express.json());
 app.use(express.static('public'));
-app.use('/api/users', userRoutes); // 2. استفاده از روت‌ها
-app.use('/api/admin', protect, admin, adminRoutes); 
+app.use('/api/users', userRoutes);
+app.use('/api/admin', protect, admin, adminRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const PORT = process.env.PORT || 5000;
@@ -27,21 +27,28 @@ app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
-// @desc    Fetch the next available task for annotation
-// @route   GET /api/tasks/next
 // @desc    Get the next available task based on mode (annotation or verification)
-// @route   GET /api/tasks/next?mode=annotation
-app.get('/api/tasks/next', protect, async (req, res) => { // 'protect' اضافه شد
+// @route   GET /api/tasks/next?mode=annotation|verification
+// @access  Private
+app.get('/api/tasks/next', protect, async (req, res) => {
   try {
     const { mode } = req.query;
-    const userId = req.user._id; // ID کاربر از میدل‌ور protect می‌آید
+    const userId = req.user._id;
+    const userRole = req.user.role;
 
+    // === چک امنیتی: بررسی role کاربر ===
     if (mode === 'annotation') {
-      // پیدا کردن یک تسک و آپدیت اتمیک آن برای قفل کردن
+      // فقط annotator یا admin می‌توانند تسک اصلاح دریافت کنند
+      if (userRole === 'verifier') {
+        return res.status(403).json({
+          message: 'شما به عنوان تاییدکننده نمی‌توانید تسک اصلاح دریافت کنید.',
+        });
+      }
+
       const task = await Task.findOneAndUpdate(
         { status: 'pending_annotation' },
         { status: 'in_progress', annotatedBy: userId },
-        { new: true } // برگرداندن داکیومنت آپدیت شده
+        { new: true }
       );
 
       if (!task) {
@@ -50,10 +57,16 @@ app.get('/api/tasks/next', protect, async (req, res) => { // 'protect' اضاف�
       res.json(task);
 
     } else if (mode === 'verification') {
-      // پیدا کردن یک تسک که در انتظار تایید است و توسط کاربر دیگری اصلاح شده
+      // فقط verifier یا admin می‌توانند تسک تایید دریافت کنند
+      if (userRole === 'annotator') {
+        return res.status(403).json({
+          message: 'شما به عنوان اصلاح‌کننده نمی‌توانید تسک تایید دریافت کنید.',
+        });
+      }
+
       const task = await Task.findOne({
         status: 'pending_verification',
-        annotatedBy: { $ne: userId } // شرط کلیدی: کاربر اصلاح‌کننده، کاربر فعلی نباشد
+        annotatedBy: { $ne: userId },
       });
 
       if (!task) {
@@ -70,70 +83,91 @@ app.get('/api/tasks/next', protect, async (req, res) => { // 'protect' اضاف�
   }
 });
 
-// ... (after the GET endpoint)
-
 // @desc    Update a task with correction data
 // @route   PUT /api/tasks/:id
-app.put('/api/tasks/:id', protect, async (req, res) => { // 'protect' اضافه شد
+// @access  Private (فقط annotator و admin)
+// @desc    Update a task with correction data
+// @route   PUT /api/tasks/:id
+// @access  Private (فقط annotator و admin)
+// فایل: server.js
+
+// ... کد های قبلی
+
+app.put('/api/tasks/:id', protect, checkRole('annotator', 'admin'), async (req, res) => {
   try {
-    const { correctedText, gender, ageRange } = req.body;
+    // ✅ تمام فیلدها از جمله تگ‌های جدید را دریافت می‌کنیم
+    const {
+      correctedText,
+      gender,
+      ageRange,
+      dialect,
+      emotion,
+      backgroundNoise,
+      profanity,
+    } = req.body;
+    
     const taskId = req.params.id;
 
-    // Find the task by its ID and update it
     const updatedTask = await Task.findByIdAndUpdate(
       taskId,
       {
         correctedText,
         gender,
         ageRange,
-        status: 'pending_verification', // The task is now waiting for verification
+        // ✅ تگ‌های جدید را برای ذخیره شدن اضافه می‌کنیم
+        dialect,
+        emotion,
+        backgroundNoise,
+        profanity,
+        status: 'pending_verification',
       },
-      { new: true } // This option returns the updated document
+      { new: true }
     );
 
     if (!updatedTask) {
       return res.status(404).json({ message: 'Task not found.' });
     }
 
-    res.json(updatedTask); // Send back the updated task as confirmation
+    res.json(updatedTask);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
 });
 
-
-// ... (after the other app.put, app.get endpoints)
-
 // @desc    Verify (approve/reject) a task
 // @route   POST /api/tasks/:id/verify
-app.post('/api/tasks/:id/verify', protect, async (req, res) => {
+// @access  Private (فقط verifier و admin)
+app.post('/api/tasks/:id/verify', protect, checkRole('verifier', 'admin'), async (req, res) => {
   try {
     const { action } = req.body;
     const taskId = req.params.id;
-    const verifierId = req.user._id; // <-- ID کاربر تاییدکننده
+    const verifierId = req.user._id;
 
     let updateData;
 
     if (action === 'approve') {
-      // اگر تایید شد، ID تاییدکننده را هم ثبت کن
-      updateData = { status: 'completed', verifiedBy: verifierId }; // <-- تغییر در این خط
+      updateData = { status: 'completed', verifiedBy: verifierId };
     } else if (action === 'reject') {
-      // اگر رد شد، اطلاعات اصلاح قبلی و اصلاح‌کننده را پاک کن
-      updateData = { 
+      // ✅ هنگام رد کردن، تگ‌های جدید هم پاک می‌شوند
+      updateData = {
         status: 'pending_annotation',
         correctedText: '',
         gender: '',
         ageRange: '',
-        annotatedBy: null, // <-- پاک کردن اصلاح‌کننده قبلی
+        dialect: '',
+        emotion: '',
+        backgroundNoise: '',
+        profanity: '',
+        annotatedBy: null,
       };
     } else {
       return res.status(400).json({ message: 'Invalid action.' });
     }
-
+    
     const updatedTask = await Task.findByIdAndUpdate(
       taskId,
-      { $set: updateData }, // Using $set to apply the changes
+      { $set: updateData },
       { new: true }
     );
 
@@ -148,8 +182,6 @@ app.post('/api/tasks/:id/verify', protect, async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
-
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

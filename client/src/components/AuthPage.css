@@ -86,3 +86,24 @@
   font-size: 0.9rem;
   box-shadow: none;
 }
+
+/* in src/components/AuthPage.css (at the end) */
+
+.auth-success {
+  color: #00ADB5; /* یا هر رنگ موفقیت دیگری از تم شما */
+  background-color: rgba(0, 173, 181, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(0, 173, 181, 0.3);
+  text-align: center;
+}
+
+/* in src/components/AuthPage.css (at the end) */
+
+.input-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: #95a5a6;
+  margin-top: 4px;
+}

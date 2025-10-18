@@ -2,17 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import '../ThemeSelector.css';
 
 const themes = [
-  { id: "theme1", name: "Warm", colors: ["#FFF5E4", "#FFE3E1", "#FFD1D1", "#FF9494"] },
-  { id: "theme2", name: "Dark Ocean", colors: ["#222831", "#393E46", "#00ADB5", "#EEEEEE"] },
-  { id: "theme3", name: "Neon", colors: ["#08D9D6", "#252A34", "#FF2E63", "#EAEAEA"] },
-  { id: "theme4", name: "Pastel", colors: ["#FFB6B9", "#FAE3D9", "#BBDED6", "#61C0BF"] }
+  { id: "theme1", name: "گرم", colors: ["#FFF5E4", "#FFE3E1", "#FFD1D1", "#FF9494"] },
+  { id: "theme2", name: "اقیانوس تاریک", colors: ["#222831", "#393E46", "#00ADB5", "#EEEEEE"] },
+  { id: "theme3", name: "نئون", colors: ["#08D9D6", "#252A34", "#FF2E63", "#EAEAEA"] },
+  { id: "theme4", name: "پاستلی", colors: ["#FFB6B9", "#FAE3D9", "#BBDED6", "#61C0BF"] }
 ];
 
 const ThemeSelector = ({ currentTheme, onThemeChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // بستن منو با کلیک خارج از آن
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -38,7 +37,7 @@ const ThemeSelector = ({ currentTheme, onThemeChange }) => {
       <button 
         className={`theme-menu-toggle ${isOpen ? 'active' : ''}`}
         onClick={toggleMenu}
-        aria-label="Toggle theme menu"
+        aria-label="باز کردن منوی انتخاب تم"
       >
         <svg 
           width="24" 
@@ -57,7 +56,7 @@ const ThemeSelector = ({ currentTheme, onThemeChange }) => {
 
       <div className={`theme-dropdown ${isOpen ? 'open' : ''}`}>
         <div className="dropdown-header">
-          <span>Select Theme</span>
+          <span>انتخاب تم</span>
         </div>
         <div className="theme-options">
           {themes.map(theme => (

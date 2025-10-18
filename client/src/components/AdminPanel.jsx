@@ -1,11 +1,15 @@
-// in client/src/components/AdminPanel.jsx
+// in src/components/AdminPanel.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import api from '../api';
-import UserManagement from './UserManagement'; // 1. ایمپورت کامپوننت جدید
+import UserManagement from './UserManagement';
+import PendingUsers from './PendingUsers';
+import CreateVerifier from './CreateVerifier';
 import './AdminPanel.css';
+import PriceSettings from './PriceSettings'; // ← این خط را اضافه کنید
 
-// بخش آپلود را به یک کامپوننت داخلی منتقل می‌کنیم
+
+// بخش بارگذاری تسک‌ها - همان کد قبلی با بهبودهای جزئی
 const UploadSection = () => {
   const [audioFiles, setAudioFiles] = useState(null);
   const [metadataFile, setMetadataFile] = useState(null);
@@ -16,7 +20,7 @@ const UploadSection = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!audioFiles || !metadataFile) {
-      setError('Please select both audio files and a metadata file.');
+      setError('لطفاً هم فایل‌های صوتی و هم فایل متادیتا را انتخاب کنید.');
       return;
     }
     setLoading(true);
@@ -32,9 +36,11 @@ const UploadSection = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setMessage(response.data.message);
-      e.target.reset(); // ریست کردن کل فرم
+      e.target.reset();
+      setAudioFiles(null);
+      setMetadataFile(null);
     } catch (err) {
-      setError(err.response ? err.response.data.message : 'Upload failed.');
+      setError(err.response ? err.response.data.message : 'بارگذاری ناموفق بود.');
     } finally {
       setLoading(false);
     }
@@ -42,18 +48,39 @@ const UploadSection = () => {
 
   return (
     <div className="upload-section">
-      <p className="admin-subtitle">Upload audio files and a metadata CSV to create new tasks.</p>
+      <p className="admin-subtitle">برای ایجاد تسک‌های جدید، فایل‌های صوتی و یک فایل متادیتای CSV را بارگذاری کنید.</p>
       <form onSubmit={handleSubmit} className="upload-form">
         <div className="form-group">
-          <label htmlFor="audio-files-input">1. Select Audio Files</label>
-          <input id="audio-files-input" type="file" multiple onChange={(e) => setAudioFiles(e.target.files)} accept="audio/*" required />
+          <label htmlFor="audio-files-input">۱. فایل‌های صوتی را انتخاب کنید</label>
+          <input 
+            id="audio-files-input" 
+            type="file" 
+            multiple 
+            onChange={(e) => setAudioFiles(e.target.files)} 
+            accept="audio/*" 
+            required 
+          />
+          {audioFiles && <span className="file-count">{audioFiles.length} فایل انتخاب شده</span>}
         </div>
         <div className="form-group">
-          <label htmlFor="metadata-file-input">2. Select Metadata File (.csv)</label>
-          <input id="metadata-file-input" type="file" onChange={(e) => setMetadataFile(e.target.files[0])} accept=".csv" required />
+          <label htmlFor="metadata-file-input">۲. فایل متادیتا (.csv) را انتخاب کنید</label>
+          <input 
+            id="metadata-file-input" 
+            type="file" 
+            onChange={(e) => setMetadataFile(e.target.files[0])} 
+            accept=".csv" 
+            required 
+          />
         </div>
         <button type="submit" className="upload-button" disabled={loading}>
-          {loading ? 'Uploading...' : 'Upload & Create Tasks'}
+          {loading ? (
+            <>
+              <span className="loading-spinner-btn">🌀</span>
+              در حال بارگذاری...
+            </>
+          ) : (
+            'بارگذاری و ایجاد تسک‌ها'
+          )}
         </button>
       </form>
       {message && <div className="success-message">{message}</div>}
@@ -62,34 +89,59 @@ const UploadSection = () => {
   );
 };
 
-
 function AdminPanel() {
-  const [activeTab, setActiveTab] = useState('upload'); // 2. State برای مدیریت تب فعال
+  const [activeTab, setActiveTab] = useState('upload');
+  const userManagementRef = useRef();
+
+  const handleRefreshUsers = () => {
+    if (userManagementRef.current && userManagementRef.current.fetchUsers) {
+      userManagementRef.current.fetchUsers();
+    }
+  };
 
   return (
     <div className="admin-panel">
-      <h2 className="admin-title">Admin Panel</h2>
+      <h2 className="admin-title">پنل مدیریت</h2>
       
-      {/* 3. دکمه‌های انتخاب تب */}
       <div className="admin-tabs">
         <button
           className={`tab-button ${activeTab === 'upload' ? 'active' : ''}`}
           onClick={() => setActiveTab('upload')}
         >
-          Upload Tasks
+          📤 بارگذاری تسک‌ها
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'pending' ? 'active' : ''}`}
+          onClick={() => setActiveTab('pending')}
+        >
+          ⏳ تایید کاربران
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'create' ? 'active' : ''}`}
+          onClick={() => setActiveTab('create')}
+        >
+          ➕ ایجاد تاییدکننده
         </button>
         <button
           className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
           onClick={() => setActiveTab('users')}
         >
-          User Management
+          👥 مدیریت کاربران
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'pricing' ? 'active' : ''}`}
+          onClick={() => setActiveTab('pricing')}
+        >
+          💰 تنظیمات قیمت
         </button>
       </div>
 
-      {/* 4. نمایش محتوای تب فعال */}
       <div className="admin-content">
         {activeTab === 'upload' && <UploadSection />}
-        {activeTab === 'users' && <UserManagement />}
+        {activeTab === 'pending' && <PendingUsers onUserApproved={handleRefreshUsers} />}
+        {activeTab === 'create' && <CreateVerifier onVerifierCreated={handleRefreshUsers} />}
+        {activeTab === 'users' && <UserManagement ref={userManagementRef} />}
+        {activeTab === 'pricing' && <PriceSettings />}
       </div>
     </div>
   );

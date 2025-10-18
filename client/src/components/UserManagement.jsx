@@ -1,8 +1,8 @@
-// in client/src/components/UserManagement.jsx
+// in src/components/UserManagement.jsx
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import api from '../api';
-import './UserManagement.css';
+import './UserManagement.css'; // استایل‌ها در همین فایل باقی می‌مانند
 
 function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -12,11 +12,12 @@ function UserManagement() {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
+      // این API حالا تمام کاربران (اصلاح‌کننده و تاییدکننده) را برمی‌گرداند
       const { data } = await api.get('/api/admin/users');
       setUsers(data);
       setError('');
     } catch (err) {
-      setError('Failed to load user data.');
+      setError('بارگذاری اطلاعات کاربران ناموفق بود.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -27,30 +28,29 @@ function UserManagement() {
     fetchUsers();
   }, [fetchUsers]);
 
-  // 1. تغییر: این تابع حالا آمار همه کاربران را ریست می‌کند
+  // منطق صفر کردن آمار بدون تغییر باقی می‌ماند
   const handleResetAllStats = async () => {
-    if (window.confirm('Are you sure you want to reset all stats for ALL users? This action cannot be undone.')) {
+    if (window.confirm('آیا مطمئن هستید که می‌خواهید آمار تمام کاربران را صفر کنید؟ این عمل غیرقابل بازگشت است.')) {
       try {
-        // 2. تغییر: URL دیگر شامل ID کاربر نیست
         await api.put(`/api/admin/users/reset`);
-        alert('All user stats reset successfully!');
-        fetchUsers(); // رفرش کردن لیست برای دیدن آمار صفر شده
+        alert('آمار تمام کاربران با موفقیت صفر شد!');
+        fetchUsers();
       } catch (err) {
-        alert('Failed to reset stats.');
+        alert('صفر کردن آمار ناموفق بود.');
         console.error(err);
       }
     }
   };
 
-  if (loading) return <div className="loading-spinner">🌀 Loading users...</div>;
+  if (loading) return <div className="loading-spinner">🌀 در حال بارگذاری کاربران...</div>;
   if (error) return <div className="error-message">{error}</div>;
 
   return (
     <div className="user-management-container">
-      {/* 3. دکمه کلی برای ریست کردن در اینجا اضافه شد */}
       <div className="toolbar">
+        <h3 className="section-title">لیست تمام کاربران</h3>
         <button className="reset-all-btn" onClick={handleResetAllStats}>
-          Reset All User Stats
+          صفر کردن آمار همه کاربران
         </button>
       </div>
 
@@ -58,27 +58,36 @@ function UserManagement() {
         <table className="user-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Annotations</th>
-              <th>Verifications</th>
-              {/* 4. ستون Actions حذف شد */}
+              <th>نام</th>
+              <th>نام خانوادگی</th>
+              <th>شماره تلفن</th>
+              <th>نقش</th>
+              <th>وضعیت</th>
+              <th>اصلاح‌ها</th>
+              <th>تاییدها</th>
             </tr>
           </thead>
           <tbody>
             {users.length > 0 ? (
               users.map((user) => (
                 <tr key={user._id}>
-                  <td>{user.name}</td>
-                  <td>{user.email}</td>
-                  <td>{user.stats.annotationsCompleted}</td>
-                  <td>{user.stats.verificationsCompleted}</td>
-                  {/* 5. دکمه ریست تکی از اینجا حذف شد */}
+                  <td>{user.firstName}</td>
+                  <td>{user.lastName}</td>
+                  <td>{user.phoneNumber}</td>
+                  <td>{user.role === 'annotator' ? 'اصلاح‌کننده' : 'تاییدکننده'}</td>
+                  <td>
+                    {/* نمایش وضعیت با یک نشان رنگی */}
+                    <span className={`status-badge status-${user.status}`}>
+                      {user.status === 'active' ? 'فعال' : 'در انتظار'}
+                    </span>
+                  </td>
+                  <td>{user.annotationsCompleted}</td>
+                  <td>{user.verificationsCompleted}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="4">No users found.</td>
+                <td colSpan="7">هیچ کاربری یافت نشد.</td>
               </tr>
             )}
           </tbody>
@@ -87,5 +96,7 @@ function UserManagement() {
     </div>
   );
 }
+
+UserManagement.displayName = 'UserManagement';
 
 export default UserManagement;

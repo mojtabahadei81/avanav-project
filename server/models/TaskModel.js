@@ -12,23 +12,43 @@ const taskSchema = new mongoose.Schema({
   status: {
     type: String,
     required: true,
-    // 'in_progress' را به لیست وضعیت‌ها اضافه کردیم
     enum: ['pending_annotation', 'in_progress', 'pending_verification', 'completed'],
     default: 'pending_annotation',
   },
-  // --- فیلدهای جدید ---
   annotatedBy: {
-    type: mongoose.Schema.Types.ObjectId, // برای ذخیره ID کاربر
-    ref: 'User', // ارجاع به مدل 'User'
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
   },
-  // --------------------
   verifiedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
   correctedText: { type: String },
   gender: { type: String, enum: ['male', 'female'] },
-  ageRange: { type: String },
+  ageRange: { 
+    type: String, 
+    enum: ['child', 'teen', 'young', 'middle-aged', 'elderly'],
+  },
+  
+  // === تگ‌های جدید ===
+  dialect: { 
+    type: String,
+    enum: ['tehran', 'isfahan', 'shiraz', 'mashhad', 'kerman', 'yazd', 'kashan', 'bandari', 'northern'],
+  },
+  emotion: {
+    type: String,
+    enum: ['happy', 'sad', 'angry', 'fear', 'surprise', 'disgust', 'neutral'],
+  },
+  backgroundNoise: {
+    type: String,
+    enum: ['none', 'bird', 'animals', 'traffic', 'wind', 'rain', 'music', 'other'],
+  },
+  profanity: {
+    type: String,
+    enum: ['yes', 'no'],
+  },
+  // =====================
+  
 }, {
   timestamps: true,
 });

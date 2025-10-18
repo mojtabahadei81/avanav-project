@@ -220,3 +220,23 @@
   padding: 10px;
   border-radius: 5px;
 }
+
+/* in src/components/AdminPanel.css (at the end) */
+
+.loading-spinner-btn {
+  display: inline-block;
+  margin-right: 8px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.file-count {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  margin-top: 0.5rem;
+}

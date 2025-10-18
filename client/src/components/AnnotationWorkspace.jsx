@@ -1,17 +1,30 @@
-// in client/src/components/AnnotationWorkspace.jsx
+// src/components/AnnotationWorkspace.jsx
+
 import React, { useState, useEffect } from 'react';
-import api from '../api'; // <-- 1. تغییر: استفاده از api
+import api from '../api';
+import { TAGS } from '../constants/tags'; // <-- مطمئن شوید این import درست است
+import './AnnotationWorkspace.css';
 
 const AnnotationWorkspace = ({ task, onTaskSubmit }) => {
+  // === State ها برای همه فیلدها ===
   const [correctedText, setCorrectedText] = useState('');
   const [gender, setGender] = useState('');
   const [ageRange, setAgeRange] = useState('');
+  const [dialect, setDialect] = useState('');
+  const [emotion, setEmotion] = useState('');
+  const [backgroundNoise, setBackgroundNoise] = useState('');
+  const [profanity, setProfanity] = useState('');
 
+  // === ریست کردن فرم با تسک جدید ===
   useEffect(() => {
     if (task) {
       setCorrectedText(task.originalText);
       setGender('');
       setAgeRange('');
+      setDialect('');
+      setEmotion('');
+      setBackgroundNoise('');
+      setProfanity('');
     }
   }, [task]);
 
@@ -19,42 +32,44 @@ const AnnotationWorkspace = ({ task, onTaskSubmit }) => {
     return null;
   }
 
+  // === ارسال داده‌ها به سرور ===
   const handleSubmit = async () => {
-    if (!correctedText || !gender || !ageRange) {
-      alert('Please fill all fields before submitting.');
+    if (!correctedText || !gender || !ageRange || !dialect || !emotion || !backgroundNoise || !profanity) {
+      alert('لطفا قبل از ثبت، تمام فیلدها را پر کنید.');
       return;
     }
     try {
-      // 2. تغییر: استفاده از api.put و URL کوتاه شده
-      const response = await api.put(`/api/tasks/${task._id}`, {
+      // ✅ ارسال تمام فیلدها به API
+      await api.put(`/api/tasks/${task._id}`, {
         correctedText,
         gender,
         ageRange,
+        dialect,
+        emotion,
+        backgroundNoise,
+        profanity,
       });
-      console.log('Task updated successfully:', response.data);
       onTaskSubmit();
     } catch (error) {
       console.error('Error submitting task:', error);
-      alert('Failed to submit correction. Please try again.');
+      alert('ثبت اصلاح ناموفق بود. لطفا دوباره تلاش کنید.');
     }
   };
 
   const audioSrc = `http://localhost:5000${task.audioUrl}`;
 
   return (
-    // ... (کد JSX شما بدون تغییر باقی می‌ماند)
     <div className="workspace-container">
-      <h2>Annotation Workspace</h2>
-      <p><strong>Task ID:</strong> {task._id}</p>
+      <h2>فضای کار اصلاح</h2>
       
       <div className="audio-player">
         <audio controls src={audioSrc}>
-          Your browser does not support the audio element.
+          مرورگر شما از پخش صدا پشتیبانی نمی‌کند.
         </audio>
       </div>
 
       <div className="text-editor">
-        <label htmlFor="transcription">Transcription:</label>
+        <label htmlFor="transcription">متن پیاده‌سازی شده:</label>
         <textarea
           id="transcription"
           value={correctedText}
@@ -63,30 +78,82 @@ const AnnotationWorkspace = ({ task, onTaskSubmit }) => {
         />
       </div>
 
+      {/* === ✅ بخش نمایش تمام تگ‌ها === */}
+
+      {/* --- سطر اول: جنسیت و بازه سنی --- */}
       <div className="metadata-form">
         <div>
-          <label htmlFor="gender">Gender:</label>
-            <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-            </select>
-
+          <label htmlFor="gender">{TAGS.GENDER.label}:</label>
+          <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
+            {TAGS.GENDER.options.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
-          <label htmlFor="age">Age Range:</label>
-            <select id="age" value={ageRange} onChange={(e) => setAgeRange(e.target.value)}>
-                <option value="">Select Age Range</option>
-                <option value="18-25">18-25</option>
-                <option value="26-35">26-35</option>
-                <option value="36-45">36-45</option>
-                <option value="46+">46+</option>
-            </select>
+          <label htmlFor="age">{TAGS.AGE_RANGE.label}:</label>
+          <select id="age" value={ageRange} onChange={(e) => setAgeRange(e.target.value)}>
+            {TAGS.AGE_RANGE.options.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* --- سطر دوم: لهجه و احساسات --- */}
+      <div className="metadata-form">
+        <div>
+          <label htmlFor="dialect">{TAGS.DIALECT.label}:</label>
+          <select id="dialect" value={dialect} onChange={(e) => setDialect(e.target.value)}>
+            {TAGS.DIALECT.options.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="emotion">{TAGS.EMOTION.label}:</label>
+          <select id="emotion" value={emotion} onChange={(e) => setEmotion(e.target.value)}>
+            {TAGS.EMOTION.options.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* --- سطر سوم: صدای پس‌زمینه و جملات رکیک --- */}
+      <div className="metadata-form">
+        <div>
+          <label htmlFor="backgroundNoise">{TAGS.BACKGROUND_NOISE.label}:</label>
+          <select id="backgroundNoise" value={backgroundNoise} onChange={(e) => setBackgroundNoise(e.target.value)}>
+            {TAGS.BACKGROUND_NOISE.options.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="profanity">{TAGS.PROFANITY.label}:</label>
+          <select id="profanity" value={profanity} onChange={(e) => setProfanity(e.target.value)}>
+            {TAGS.PROFANITY.options.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
       
       <div className="controls">
-        <button onClick={handleSubmit}>Submit Correction</button>
+        <button onClick={handleSubmit}>ثبت اصلاح</button>
       </div>
     </div>
   );
