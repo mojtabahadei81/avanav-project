@@ -7,6 +7,7 @@ import PendingUsers from './PendingUsers';
 import CreateVerifier from './CreateVerifier';
 import './AdminPanel.css';
 import PriceSettings from './PriceSettings'; // ← این خط را اضافه کنید
+import AdminGuidePage from './AdminGuidePage'; // ✅ 1. راهنمای ادمین را ایمپورت کن
 
 
 // بخش بارگذاری تسک‌ها - همان کد قبلی با بهبودهای جزئی
@@ -48,7 +49,7 @@ const UploadSection = () => {
 
   return (
     <div className="upload-section">
-      <p className="admin-subtitle">برای ایجاد تسک‌های جدید، فایل‌های صوتی و یک فایل متادیتای CSV را بارگذاری کنید.</p>
+      <p className="admin-subtitle">برای ایجاد تسک‌های جدید، فایل‌های صوتی و یک فایل متادیتا را بارگذاری کنید.</p>
       <form onSubmit={handleSubmit} className="upload-form">
         <div className="form-group">
           <label htmlFor="audio-files-input">۱. فایل‌های صوتی را انتخاب کنید</label>
@@ -63,12 +64,12 @@ const UploadSection = () => {
           {audioFiles && <span className="file-count">{audioFiles.length} فایل انتخاب شده</span>}
         </div>
         <div className="form-group">
-          <label htmlFor="metadata-file-input">۲. فایل متادیتا (.csv) را انتخاب کنید</label>
+          <label htmlFor="metadata-file-input">۲. فایل متادیتا (.csv یا .json) را انتخاب کنید</label>
           <input 
             id="metadata-file-input" 
             type="file" 
             onChange={(e) => setMetadataFile(e.target.files[0])} 
-            accept=".csv" 
+            accept=".csv,.json" 
             required 
           />
         </div>
@@ -134,6 +135,12 @@ function AdminPanel() {
         >
           💰 تنظیمات قیمت
         </button>
+        <button
+          className={`tab-button ${activeTab === 'guide' ? 'active' : ''}`}
+          onClick={() => setActiveTab('guide')}
+        >
+          ❓ راهنما
+        </button>
       </div>
 
       <div className="admin-content">
@@ -142,6 +149,7 @@ function AdminPanel() {
         {activeTab === 'create' && <CreateVerifier onVerifierCreated={handleRefreshUsers} />}
         {activeTab === 'users' && <UserManagement ref={userManagementRef} />}
         {activeTab === 'pricing' && <PriceSettings />}
+        {activeTab === 'guide' && <AdminGuidePage />}
       </div>
     </div>
   );

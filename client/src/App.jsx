@@ -9,7 +9,9 @@ import AuthPage from './components/AuthPage';
 import AdminPanel from './components/AdminPanel';
 import UserStats from './components/UserStats';
 import ChangePasswordPage from './components/ChangePasswordPage';
+import UserGuidePage from './components/UserGuidePage'; // ✅ 1. راهنمای کاربر را ایمپورت کن
 import './App.css';
+
 // نکته: دیگر نیازی به ایمپورت TAGS در این فایل نیست
 
 function App() {
@@ -20,6 +22,7 @@ function App() {
   const [theme, setTheme] = useState("theme2");
   const [userInfo, setUserInfo] = useState(null);
   const [view, setView] = useState('dashboard');
+  const [showUserGuide, setShowUserGuide] = useState(false); // ✅ 2. استیت جدید را اضافه کن
 
   useEffect(() => {
     const storedUserInfo = localStorage.getItem('userInfo');
@@ -130,16 +133,25 @@ function App() {
     );
   }
   
+   if (showUserGuide) {
+    return (
+      <div className="App">
+        <UserGuidePage onClose={() => setShowUserGuide(false)} />
+      </div>
+    );
+  }
+
   if (userInfo.role === 'admin' && view === 'admin') {
     return (
       <div className="App">
         <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />
-        <div className="logout-button-container">
+         <div className="top-left-controls">
           <button onClick={handleLogout} className="logout-button">خروج</button>
+          <button onClick={() => setShowUserGuide(true)} className="guide-button">راهنما ؟</button>
         </div>
         <div className="App-header">
           <h1 className="dashboard-title">
-            <span className="title-gradient">آوانویس</span>
+            <span className="title-gradient">صدانویس</span>
             <span className="title-sub">{userInfo.firstName}، خوش آمدید!</span>
           </h1>
           
@@ -170,7 +182,7 @@ function App() {
       </div>
       <div className="App-header">
         <h1 className="dashboard-title">
-          <span className="title-gradient">آوانویس</span>
+          <span className="title-gradient">صدانویس</span>
           <span className="title-sub">{userInfo.firstName}، خوش آمدید!</span>
         </h1>
         

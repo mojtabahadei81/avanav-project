@@ -1,0 +1,115 @@
+/* src/components/GuidePage.css */
+
+.guide-container {
+  direction: rtl; /* ✅✅✅ این خط کلیدی‌ترین تغییر است ✅✅✅ */
+  width: 100%;
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 40px;
+  background-color: var(--secondary-bg);
+  color: var(--text-color);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.5s ease-out;
+  text-align: right; /* این خط برای تاکید بیشتر باقی می‌ماند */
+}
+
+.guide-container.admin-guide {
+  margin: 0;
+  max-width: 100%;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.guide-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--accent-color);
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--accent-color);
+  text-align: center;
+}
+
+.guide-section {
+  margin-bottom: 30px;
+}
+
+.guide-section h2 {
+  font-size: 1.8rem;
+  color: var(--text-color);
+  margin-bottom: 15px;
+  text-align: right;
+}
+
+.guide-section h3 {
+  font-size: 1.4rem;
+  color: var(--text-color);
+  opacity: 0.9;
+  margin-bottom: 10px;
+  text-align: right;
+}
+
+.guide-section p {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--text-color);
+  opacity: 0.85;
+  text-align: justify; /* متن پاراگراف‌ها را مرتب می‌کند */
+}
+
+.guide-section ul {
+  /* با direction: rtl، پدینگ باید سمت راست باشد */
+  padding-right: 20px; 
+  list-style-type: disc;
+}
+
+.guide-section ul ul {
+  padding-right: 30px; /* برای لیست‌های تو در تو */
+}
+
+.guide-section li {
+  margin-bottom: 10px;
+  line-height: 1.7;
+  text-align: right;
+}
+
+.guide-section code {
+  background-color: var(--dark-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  color: var(--accent-color);
+}
+
+.guide-back-button {
+  display: inline-block;
+  margin-bottom: 20px;
+  background-color: transparent;
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  padding: 8px 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.guide-back-button:hover {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.guide-alert {
+  padding: 15px;
+  margin-top: 15px;
+  /* بردر باید سمت راست باشد */
+  border-right: 4px solid var(--accent-color);
+  border-left: none; 
+  background-color: rgba(0, 173, 181, 0.1);
+  border-radius: 4px;
+  text-align: right;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

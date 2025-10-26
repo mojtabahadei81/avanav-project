@@ -1,16 +1,19 @@
-// in server/routes/adminRoutes.js
+// server/routes/adminRoutes.js (نسخه نهایی و کامل)
 
 const express = require('express');
 const router = express.Router();
 const csv = require('csv-parser');
 const fs = require('fs');
+const path = require('path');
+const readline = require('readline');
 const upload = require('../config/multerConfig');
 const Task = require('../models/TaskModel');
 const User = require('../models/UserModel');
+const Settings = require('../models/SettingsModel');
 const { protect } = require('../middleware/authMiddleware');
 const { checkRole } = require('../middleware/roleMiddleware');
 
-// === توابع اعتبارسنجی ===
+// === توابع اعتبارسنجی (بدون تغییر) ===
 const validatePhoneNumber = (phone) => {
   const phoneRegex = /^09\d{9}$/;
   return phoneRegex.test(phone);
@@ -22,7 +25,11 @@ const validateEmail = (email) => {
   return emailRegex.test(email);
 };
 
-// روت آپلود (بدون تغییر)
+// ⬇️⬇️⬇️ بخش آپلود با منطق جدید جایگزین شده است ⬇️⬇️⬇️
+
+// @desc    Upload audio files and metadata (CSV or JSON) to create tasks
+// @route   POST /api/admin/upload
+// @access  Private/Admin
 router.post(
   '/upload',
   upload.fields([
@@ -30,32 +37,121 @@ router.post(
     { name: 'metadata', maxCount: 1 },
   ]),
   async (req, res) => {
-    if (!req.files || !req.files.metadata) {
-      return res.status(400).json({ message: 'Metadata CSV file is missing.' });
+    if (!req.files || !req.files.metadata || !req.files.audioFiles) {
+      return res.status(400).json({ message: 'لطفا هم فایل‌های صوتی و هم فایل متادیتا را انتخاب کنید.' });
     }
+
     const metadataFile = req.files.metadata[0];
-    const results = [];
-    let createdCount = 0;
-    fs.createReadStream(metadataFile.path)
-      .pipe(csv())
-      .on('data', (data) => results.push(data))
-      .on('end', async () => {
+    const audioFiles = req.files.audioFiles;
+    const fileExtension = path.extname(metadataFile.originalname).toLowerCase();
+
+    try {
+      if (fileExtension === '.csv') {
+        await processCsvUpload(metadataFile, audioFiles, res);
+      } else if (fileExtension === '.json') {
+        await processJsonUpload(metadataFile, audioFiles, res);
+      } else {
         fs.unlinkSync(metadataFile.path); 
-        try {
-          for (const record of results) {
-            await Task.create({
-              audioUrl: `/uploads/${record.audio_filename}`,
-              originalText: record.transcript,
-            });
-            createdCount++;
-          }
-          res.status(201).json({ message: `${createdCount} tasks created successfully.` });
-        } catch (error) {
-          res.status(500).json({ message: 'Failed to create tasks from CSV.' });
-        }
-      });
+        return res.status(400).json({ message: 'فرمت فایل متادیتا پشتیبانی نمی‌شود. لطفا از .csv یا .json استفاده کنید.' });
+      }
+    } catch (error) {
+      console.error('Upload processing error:', error);
+      fs.unlinkSync(metadataFile.path);
+      return res.status(500).json({ message: 'خطایی در پردازش فایل‌ها رخ داد.' });
+    }
   }
 );
+
+// --- تابع کمکی برای پردازش فایل CSV ---
+const processCsvUpload = (metadataFile, audioFiles, res) => {
+  const results = [];
+  fs.createReadStream(metadataFile.path)
+    .pipe(csv())
+    .on('data', (data) => results.push(data))
+    .on('end', () => {
+      fs.unlinkSync(metadataFile.path); 
+      const metadataMap = new Map();
+      results.forEach(record => {
+        if (record.audio_filename) {
+          metadataMap.set(record.audio_filename, record);
+        }
+      });
+      createTasksFromMetadata(metadataMap, audioFiles, 'transcript', res, 'audio_filename');
+    })
+    .on('error', (error) => {
+      fs.unlinkSync(metadataFile.path);
+      console.error('CSV parsing error:', error);
+      res.status(400).json({ message: 'فایل CSV نامعتبر است یا هدرهای لازم را ندارد.' });
+    });
+};
+
+// --- تابع کمکی برای پردازش فایل JSON ---
+const processJsonUpload = async (metadataFile, audioFiles, res) => {
+  const results = [];
+  const fileStream = fs.createReadStream(metadataFile.path);
+  const rl = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
+
+  for await (const line of rl) {
+    try {
+      if (line.trim()) results.push(JSON.parse(line));
+    } catch (e) {
+      fs.unlinkSync(metadataFile.path);
+      return res.status(400).json({ message: 'فایل JSON معتبر نیست. هر خط باید یک آبجکت JSON کامل باشد.' });
+    }
+  }
+
+  fs.unlinkSync(metadataFile.path);
+  const metadataMap = new Map();
+  results.forEach(record => {
+    if (record.chunk_name) {
+      metadataMap.set(record.chunk_name, record);
+    }
+  });
+  await createTasksFromMetadata(metadataMap, audioFiles, 'transcript_full', res, 'chunk_name');
+};
+
+// --- تابع اصلی و مشترک برای ساخت تسک‌ها ---
+const createTasksFromMetadata = async (metadataMap, audioFiles, transcriptKey, res, filenameKey) => {
+  const unmatchedAudioFiles = [];
+  
+  for (const audioFile of audioFiles) {
+    if (!metadataMap.has(audioFile.originalname)) {
+      unmatchedAudioFiles.push(audioFile.originalname);
+    }
+  }
+
+  if (unmatchedAudioFiles.length > 0) {
+    const errorMessage = `برای فایل‌های صوتی زیر اطلاعاتی در متادیتا یافت نشد: ${unmatchedAudioFiles.join(', ')}`;
+    return res.status(400).json({ message: errorMessage });
+  }
+
+  const tasksToCreate = audioFiles
+    .filter(audioFile => metadataMap.has(audioFile.originalname)) // فیلتر کردن فایل‌هایی که متادیتا دارند
+    .map(audioFile => {
+      const metadata = metadataMap.get(audioFile.originalname);
+      return {
+        audioUrl: `/uploads/${audioFile.originalname}`,
+        originalText: metadata[transcriptKey],
+      };
+    });
+
+  if (tasksToCreate.length === 0 && audioFiles.length > 0) {
+      return res.status(400).json({ message: `هیچ یک از نام فایل‌های صوتی آپلود شده با نام فایل‌ها در متادیتای ${filenameKey} مطابقت نداشت.` });
+  }
+
+  try {
+    if (tasksToCreate.length > 0) {
+      await Task.insertMany(tasksToCreate);
+    }
+    res.status(201).json({ message: ` .تسک با موفقیت ایجاد شد ${tasksToCreate.length}` });
+  } catch (error) {
+    console.error('Error creating tasks:', error);
+    res.status(500).json({ message: 'خطا در ذخیره تسک‌ها در دیتابیس.' });
+  }
+};
+
+// ⬆️⬆️⬆️ پایان بخش جدید آپلود ⬆️⬆️⬆️
+
 
 // @desc    Get all users (excluding admins) with their stats
 // @route   GET /api/admin/users
@@ -123,22 +219,18 @@ router.put('/approve-user/:id', async (req, res) => {
 router.post('/create-verifier', async (req, res) => {
   const { firstName, lastName, phoneNumber, password, email } = req.body;
   
-  // اعتبارسنجی فیلدهای الزامی
   if (!firstName || !lastName || !phoneNumber || !password) {
     return res.status(400).json({ message: 'لطفا تمام فیلدهای الزامی را پر کنید.' });
   }
 
-  // اعتبارسنجی شماره تلفن
   if (!validatePhoneNumber(phoneNumber)) {
     return res.status(400).json({ message: 'شماره تلفن باید با 09 شروع شود و دقیقاً 11 رقم باشد.' });
   }
 
-  // اعتبارسنجی ایمیل
   if (email && !validateEmail(email)) {
     return res.status(400).json({ message: 'فرمت ایمیل صحیح نیست.' });
   }
 
-  // اعتبارسنجی طول رمز عبور
   if (password.length < 6) {
     return res.status(400).json({ message: 'رمز عبور باید حداقل 6 کاراکتر باشد.' });
   }
@@ -167,10 +259,6 @@ router.post('/create-verifier', async (req, res) => {
   }
 });
 
-// in server/routes/adminRoutes.js (در انتهای فایل، قبل از module.exports)
-
-const Settings = require('../models/SettingsModel'); // ← اضافه کردن در ابتدای فایل
-
 // @desc    Get current pricing settings
 // @route   GET /api/admin/settings
 // @access  Private/Admin
@@ -178,7 +266,6 @@ router.get('/settings', protect, checkRole('admin'), async (req, res) => {
   try {
     let settings = await Settings.findOne();
     
-    // اگر Settings وجود نداشت، یکی بساز
     if (!settings) {
       settings = await Settings.create({
         annotationPrice: 700,
@@ -199,7 +286,6 @@ router.get('/settings', protect, checkRole('admin'), async (req, res) => {
 router.put('/settings', protect, checkRole('admin'), async (req, res) => {
   const { annotationPrice, verificationPrice } = req.body;
 
-  // اعتبارسنجی
   if (annotationPrice == null || verificationPrice == null) {
     return res.status(400).json({ message: 'لطفا هر دو قیمت را وارد کنید.' });
   }
